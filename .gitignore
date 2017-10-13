@@ -1,0 +1,6 @@
+*.xcuserstate
+*.xcuserdata/
+xcuserdata/
+xcshareddata/
+.metadata/
+*.DS_Store
