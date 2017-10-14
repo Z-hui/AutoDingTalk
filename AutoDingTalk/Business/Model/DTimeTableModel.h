@@ -10,6 +10,6 @@
 
 @interface DTimeTableModel : NSObject
 @property (nonatomic,strong)NSString *uid;
-@property (nonatomic,strong)NSString *time;
+@property (nonatomic,strong)NSString *push_time;
 @property (nonatomic,strong)NSString *content;
 @end

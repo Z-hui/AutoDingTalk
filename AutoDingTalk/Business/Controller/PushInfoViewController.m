@@ -37,7 +37,7 @@
         self.titleLabel.text = @"编辑推送";
         self.deleteBtn.hidden = NO;
         self.titleField.text = self.DtModel.content;
-        [self.timeSetBtn setTitle:self.DtModel.time forState:(UIControlStateNormal)];
+        [self.timeSetBtn setTitle:self.DtModel.push_time forState:(UIControlStateNormal)];
     }
 }
 
@@ -51,7 +51,7 @@
 }
 - (IBAction)deleteAction:(id)sender {
    
-    [DNetTool Post:@"time/delete" param:@{@"uid":self.DtModel.uid} success:^(NSDictionary *responseObject) {
+    [DNetTool Post:@"index/delPush" param:@{@"uid":self.DtModel.uid} success:^(NSDictionary *responseObject) {
         
     } failure:^(NSError *error) {
         
@@ -74,7 +74,7 @@
     }
     
     if (self.selectTime.length>0) {
-        [self.pushMessage setObject:self.selectTime forKey:@"time"];
+        [self.pushMessage setObject:self.selectTime forKey:@"push_time"];
     }
     else
     {
@@ -85,7 +85,7 @@
     if (self.DtModel != nil) {
         [self.pushMessage setObject:self.DtModel.uid forKey:@"uid"];
     }
-    [DNetTool Post:@"time/set" param:self.pushMessage success:^(NSDictionary *responseObject) {
+    [DNetTool Post:@"index/editPush" param:self.pushMessage success:^(NSDictionary *responseObject) {
        [self dismissViewControllerAnimated:YES completion:nil];
     } failure:^(NSError *error) {
         

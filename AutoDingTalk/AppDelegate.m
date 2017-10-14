@@ -101,9 +101,9 @@
 //----------------------远程推送开始-------------
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
     
-    NSString *deviceTokenStr = [XGPush registerDevice:deviceToken account:@"LaoDaAccount" successCallback:^{
+    NSString *deviceTokenStr = [XGPush registerDevice:deviceToken account:[self getHSUUID] successCallback:^{
         //NSLog(@"[XGDemo] register push success");
-        [XGPush setAccount:@"LaoDaAccount" successCallback:^{
+        [XGPush setAccount:[self getHSUUID] successCallback:^{
             NSLog(@"[XGDemo] Set account success");
         } errorCallback:^{
             NSLog(@"[XGDemo] Set account error");
@@ -230,5 +230,13 @@
 }
 
 
-
+-(NSString *)getHSUUID{
+    NSString *uuid = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
+    uuid = [uuid lowercaseString];
+    uuid = [uuid stringByReplacingOccurrencesOfString:@"-" withString:@""];
+    if (uuid.length>32) {
+        uuid = [uuid substringWithRange:(NSMakeRange(0, 32))];
+    }
+    return uuid;
+}
 @end

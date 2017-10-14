@@ -63,17 +63,24 @@
     
     tableView.tableFooterView = [UIView new];
     
-    NSArray *dict = [[NSUserDefaults standardUserDefaults] objectForKey:PUSHMESSAGE];
-    NSLog(@"%@",dict);
+    tableView.mj_header = [MJRefreshNormalHeader headerWithRefreshingBlock:^{
+        [self loadNewData];
+    }];
+    
     // Do any additional setup after loading the view.
 }
 -(void)loadNewData
 {
-    [DNetTool Post:@"time/list" param:nil success:^(NSDictionary *responseObject) {
+    [DNetTool Post:@"index/pushList" param:nil success:^(NSDictionary *responseObject) {
         self.timeArray = [DTimeTableModel mj_objectArrayWithKeyValuesArray:responseObject[@"list"]];
         [self.tableView reloadData];
+        if ([self.tableView.mj_header isRefreshing]) {
+            [self.tableView.mj_header endRefreshing];
+        }
     } failure:^(NSError *error) {
-        
+        if ([self.tableView.mj_header isRefreshing]) {
+            [self.tableView.mj_header endRefreshing];
+        }
     }];
 }
 
@@ -88,7 +95,7 @@
 }
 -(void)viewWillAppear:(BOOL)animated
 {
-    [self.tableView reloadData];
+    [self.tableView.mj_header beginRefreshing];
 }
 
 -(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
@@ -106,7 +113,7 @@
         cell = [[UITableViewCell alloc] initWithStyle:(UITableViewCellStyleSubtitle) reuseIdentifier:@"cell"];
     }
     DTimeTableModel *model = self.timeArray[indexPath.row];
-    cell.textLabel.text = [NSString stringWithFormat:@"【%@】:%@",model.time,model.content];
+    cell.textLabel.text = [NSString stringWithFormat:@"【%@】:%@",model.push_time,model.content];
     cell.detailTextLabel.text = model.content;
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
     return  cell;

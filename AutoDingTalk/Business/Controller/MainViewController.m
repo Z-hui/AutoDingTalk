@@ -27,6 +27,7 @@
 
 @implementation MainViewController
 
+
 -(NSMutableArray *)selectDates
 {
     if (_selectDates == nil) {
@@ -37,9 +38,10 @@
 
 - (void)loadView
 {
-    UIView *view = [[UIView alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-    view.backgroundColor = [UIColor whiteColor];//[UIColor groupTableViewBackgroundColor];
-    self.view = view;
+    UIScrollView * scrollView = [[UIScrollView alloc]initWithFrame:[UIScreen mainScreen].bounds];
+    scrollView.contentSize = [UIScreen mainScreen].bounds.size;
+    scrollView.backgroundColor = [UIColor whiteColor];
+    self.view = scrollView;
     
     [self creatCaledarUI];
     
@@ -52,6 +54,11 @@
     [self.openDingTalk addTarget:self action:@selector(openDingTalkAction:) forControlEvents:(UIControlEventTouchUpInside)];
 }
 -(void)creatCaledarUI{
+    
+    UIScrollView *scrollView = (UIScrollView*)self.view;
+    scrollView.mj_header = [MJRefreshNormalHeader headerWithRefreshingBlock:^{
+        [self loadNewdata];
+    }];
     
     CGFloat height = [[UIDevice currentDevice].model hasPrefix:@"iPad"] ? 450 : 300;
     FSCalendar *calendar = [[FSCalendar alloc] initWithFrame:CGRectMake(0, 60, self.view.frame.size.width, height)];
@@ -87,7 +94,6 @@
     self.dateFormatter.dateFormat = @"yyyy-MM-dd";
     // For UITest
     self.calendar.accessibilityIdentifier = @"calendar";
-    [self loadNewdata];
 }
 -(void)viewWillAppear:(BOOL)animated
 {
@@ -102,22 +108,33 @@
 {
     
     
-    if (self.calendar.selectedDates.count >0 ) {
-        [self calendarCancleAllSelectDate];
-        return;
-    }
    
+   
+    UIScrollView *scrollView = (UIScrollView*)self.view;
+    
+    [DNetTool Post:@"index/workDay" param:nil success:^(NSDictionary *responseObject) {
+        if (responseObject != nil) {
+            
+            if (self.calendar.selectedDates.count >0 ) {
+                [self calendarCancleAllSelectDate];
+            }
+            
+            NSDictionary *dateDict = [responseObject[@"list"] firstObject];
+            NSString *nocice_dates = dateDict[@"notice_dates"];
+            
+            NSArray *dateArray = [nocice_dates componentsSeparatedByString:@","];
+            for (NSString *dateString in dateArray) {
+                [self.calendar selectDate:[self.dateFormatter dateFromString:dateString] scrollToDate:NO];
  
-    [DNetTool Post:@"select/date" param:nil success:^(NSDictionary *responseObject) {
-        
-        self.selectDates = responseObject[@"list"];
-        for (NSString *date in self.selectDates) {
-            [self.calendar selectDate:[self.dateFormatter dateFromString:date] scrollToDate:NO];
+            }
+            [self.calendar reloadData];
         }
-        [self.calendar reloadData];
+       
+        
+        [scrollView.mj_header endRefreshing];
         
     } failure:^(NSError *error) {
-        
+        [scrollView.mj_header endRefreshing];
     }];
     
     
@@ -259,9 +276,9 @@
     NSLog(@"did select date %@",[self.dateFormatter stringFromDate:date]);
 
     [self configureVisibleCells];
-    [DNetTool Post:@"date/select" param:@{@"date":[self.dateFormatter stringFromDate:date]} success:^(NSDictionary *responseObject) {
+    [DNetTool Post:@"index/editDate" param:@{@"date":[self.dateFormatter stringFromDate:date],@"is_add":@"1"} success:^(NSDictionary *responseObject) {
 
-    
+        NSLog(@"%@",responseObject);
     } failure:^(NSError *error) {
         
     }];
@@ -273,8 +290,8 @@
 
     [self configureVisibleCells];
     
-    [DNetTool Post:@"date/deselect" param:@{@"date":[self.dateFormatter stringFromDate:date]} success:^(NSDictionary *responseObject) {
-        
+    [DNetTool Post:@"index/editDate" param:@{@"date":[self.dateFormatter stringFromDate:date],@"is_add":@"0"} success:^(NSDictionary *responseObject) {
+         NSLog(@"%@",responseObject);
         
         
     } failure:^(NSError *error) {
